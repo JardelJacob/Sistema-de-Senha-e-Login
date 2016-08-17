@@ -6,14 +6,27 @@
 	<meta name="generator" content="HXPHP Framework">
 	<meta name="viewport" content="width=device-width, initial-scale=1">
 	<title><?php echo $view_title; ?></title>
-	<link rel="shortcut icon" href="<?php echo IMG; ?>favicon.jpg" type="image/x-icon">
-	<link rel="stylesheet" href="<?php echo BOWER; ?>bootstrap/dist/css/bootstrap.min.css" type="text/css">
-	<link rel="stylesheet" href="<?php echo BOWER; ?>font-awesome/css/font-awesome.min.css" type="text/css">
-	<link rel="stylesheet" href="<?php echo CSS; ?>main.css" type="text/css">
-	<?php 
+	<link rel="shortcut icon" href="<?php echo IMG; ?>favicon_1.ico" type="image/x-icon">
+
+        <!-- Bootstrap core CSS -->
+        <link href="<?php echo CSS; ?>bootstrap.min.css" rel="stylesheet">
+        <link href="<?php echo CSS; ?>bootstrap-reset.css" rel="stylesheet">
+
+        <!--Animation css-->
+        <link href="<?php echo CSS; ?>animate.css" rel="stylesheet">
+
+        <!--Icon-fonts css-->
+        <link href="<?php echo BOWER; ?>assets/font-awesome/css/font-awesome.css" rel="stylesheet" />
+        <link href="<?php echo BOWER; ?>assets/ionicon/css/ionicons.min.css" rel="stylesheet" />
+        <link href="<?php echo BOWER; ?>assets/material-design-iconic-font/css/material-design-iconic-font.min.css" rel="stylesheet" />
+
+        <!-- Custom styles for this template -->
+        <link href="<?php echo CSS; ?>style.css" rel="stylesheet">
+        <link href="<?php echo CSS; ?>helper.css" rel="stylesheet">
+	<?php
 		echo $add_css;
 		echo $add_js;
 	?>
 </head>
 <body>
-	<div class="container">
+
