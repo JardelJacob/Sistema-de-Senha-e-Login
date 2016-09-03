@@ -17,35 +17,27 @@ class View
 	private $configs;
 
 	/**
-	 * Injeção do Http Request
-	 * @var object
-	 */
-	private $request;
-
-	/**
 	 * Parâmetros de configuração da VIEW
 	 * @var string
 	 */
-	protected $partialsDir = null;
 	protected $path = null;
 	protected $template = null;
 	protected $header = null;
 	protected $file = null;
 	protected $footer = null;
-	protected $vars = [];
-	protected $assets = [
-		'css' => [],
-		'js' => []
-	];
+	protected $vars = array();
+	protected $assets = array(
+		'css' => array(),
+		'js' => array()
+	);
 
-	public function setConfigs(Configs\Config $configs, $subfolder, $controller, $action)
+	public function setConfigs(Configs\Config $configs, $controller, $action)
 	{
 		/**
 		 * Injeção das Configurações
 		 * @var object
 		 */
 		$this->configs = $configs;
-		$this->request  = new Http\Request($configs->baseURI);
 
 		/**
 		 * Tratamento das variáveis
@@ -60,18 +52,17 @@ class View
 		 */
 		$view_settings = new \stdClass;
 
-		$default_values = [
-			'partialsDir' => 'partials',
-			'path' => $subfolder . $controller,
+		$default_values = array(
+			'path' => $controller,
 			'template' => true,
-			'header' => $subfolder . 'header',
+			'header' => 'header',
 			'file' => $action,
-			'footer' => $subfolder . 'footer',
+			'footer' => 'footer',
 			'title' => $this->configs->title
-		];
+		);
 
 		foreach ($default_values as $setting => $value) {
-			if(!$this->$setting) {
+			if(is_null($this->$setting)) {
 				$view_settings->$setting = $value;
 				continue;
 			}
@@ -79,25 +70,12 @@ class View
 			$view_settings->$setting = $this->$setting;
 		}
 
-		$this->setPartialsDir($view_settings->partialsDir)
-				->setPath($view_settings->path)
+		$this->setPath($view_settings->path)
 				->setTemplate($view_settings->template)
 				->setHeader($view_settings->header)
 				->setFile($view_settings->file)
 				->setFooter($view_settings->footer)
-				->setTitle($view_settings->title);
-	}
-
-	/**
-	 * Define o diretório das views parciais
-	 * @param string  $partialsDir  Diretório
-	 */
-	public function setPartialsDir($partialsDir)
-	{
-		$viewsDir = $this->configs->views->directory;
-
-		$this->partialsDir = $viewsDir . DS . $partialsDir . DS;
-		return $this;
+				->setTitle($view_settings->title);	
 	}
 
 	/**
@@ -189,10 +167,13 @@ class View
 	 */
 	public function setAssets($type, $assets)
 	{
-		(is_array($assets)) ?
-                    $this->assets[$type] = array_merge($this->assets[$type], $assets) :
-                    array_push($this->assets[$type], $assets);
-
+		if (is_array($assets)) {
+			$this->assets[$type] = array_merge($this->assets[$type], $assets);
+		} 
+		else {
+			array_push($this->assets[$type], $assets);
+		}
+		 
 		return $this;
 	}
 
@@ -203,7 +184,7 @@ class View
 	 * @return string                HTML formatado de acordo com o tipo de arquivo
 	 */
 
-	private function assets($type, array $custom_assets = [])
+	private function assets($type, array $custom_assets = array())
 	{
 		$add_assets = '';
 
@@ -216,8 +197,8 @@ class View
 				$tag = '<script type="text/javascript" src="%s"></script>'."\n\r";
 				break;
 		}
-
-		if (count($custom_assets))
+		
+		if (count($custom_assets) > 0)
 			foreach ($custom_assets as $file)
 				$add_assets .= sprintf($tag,$file);
 
@@ -231,12 +212,12 @@ class View
 	public function flush()
 	{
 
-		$default_data = [
+		$default_data = array(
 			'title' => $this->title
-		];
+		);
 
 		$data = array_merge($default_data, $this->vars);
-
+		
 		//Extract que transforma os parâmetros em variáveis disponíveis para a VIEW
 		extract($data, EXTR_PREFIX_ALL, 'view');
 
@@ -253,7 +234,6 @@ class View
 		//Atribuição das constantes
 		define('BASE',   $baseURI);
 		define('ASSETS', $baseURI . 'public/assets/');
-		define('BOWER', $baseURI . 'public/bower_components/');
 		define('IMG',    $baseURI . 'public/img/');
 		define('CSS',    $baseURI . 'public/css/');
 		define('JS',     $baseURI . 'public/js/');
@@ -261,11 +241,11 @@ class View
 		//Verifica a existência da VIEW
 		$view = $viewsDir . $this->path . DS . $this->file . $viewsExt;
 
-		if (!file_exists($view))
+		if ( ! file_exists($view))
 			throw new \Exception("Erro fatal: A view <'$view'> não foi encontrada. Por favor, crie a view e tente novamente.", 1);
 
 		//Mecanismo de template
-		if (!$this->template) {
+		if ($this->template === false) {
 			//Inclusão da view
 			require_once($view);
 			exit();
@@ -275,7 +255,7 @@ class View
 		$header = $viewsDir . $this->header . $viewsExt;
 		$footer = $viewsDir . $this->footer . $viewsExt;
 
-		if (!file_exists($header) || !file_exists($footer))
+		if ( ! file_exists($header) || ! file_exists($footer))
 			throw new \Exception("Erro fatal: O header <$header> ou o footer <$footer> não existe. Por favor, verifique e tente novamente.");
 
 		//Inclusão dos arquivos
@@ -284,20 +264,5 @@ class View
 		require_once($footer);
 
 		exit();
-	}
-
-	public function partial($view, array $params = [])
-	{
-		if (!empty($params))
-			extract($params, EXTR_PREFIX_ALL, 'view');
-
-		$viewsExt = $this->configs->views->extension;
-
-		$viewFile = $this->partialsDir . '_' . $view . $viewsExt;
-
-		if (!file_exists($viewFile))
-			throw new \Exception("Erro fatal: A view <'$viewFile'> não foi encontrada. Por favor, crie a view e tente novamente.", 1);
-
-		require_once($viewFile);
 	}
 }

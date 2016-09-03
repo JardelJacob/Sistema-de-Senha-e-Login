@@ -4,17 +4,15 @@ namespace HXPHP\System\Configs;
 
 class RegisterModules
 {
-	public $modules = [];
-
+	public $modules = array();
+	
 	public function __construct()
 	{
-		$this->modules = [
+		$this->modules = array(
 			'database',
-			'mail',
-			'menu',
-			'auth'
-		];
-
+			'mail'
+		);
+		
 		return $this;
 	}
 }

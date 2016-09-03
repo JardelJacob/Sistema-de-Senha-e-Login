@@ -14,21 +14,21 @@ class Template
 	{
 		$this->content = $content;
 	}
-
+	
 	/**
-	 * Retorna o conteúdo do template mediante o código informado com os parâmetros substituído
+	 * Retorna o conteúdo do template mediante o código informado com os parâmetros substituído 
 	 * @param  string $code   Código do template
 	 * @param  array  $fields Fields e seus parâmetros para substituição
 	 * @return array
 	 */
-	public function getByCode($code, array $fields = [])
+	public function getByCode($code, array $fields = array())
 	{
-		if ($this->content[$code]){
+		if (isset($this->content[$code])){
 			$output = $this->content[$code];
 
-			if ($fields) {
+			if ( ! empty($fields) ) {
 				foreach ($fields as $field => $params) {
-					if (!($output[$field]) || !($params))
+					if ( ! isset($output[$field]) || empty($params))
 						continue;
 
 					$output[$field] = vsprintf($output[$field], $params);

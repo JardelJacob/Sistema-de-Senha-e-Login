@@ -2,8 +2,6 @@
 
 namespace HXPHP\System\Modules\Messages;
 
-use HXPHP\System\Tools as Tools;
-
 class LoadTemplate
 {
 	/**
@@ -22,13 +20,16 @@ class LoadTemplate
 	 * Método responsável pela leitura do arquivo JSON
 	 * @param string $template Nome do template
 	 */
-	public function __construct($template, $extension = '.json')
+	public function __construct($template)
 	{
 		/**
 		 * Caminho completo do template
 		 * @var string
 		 */
-		$template = Tools::getTemplatePath('Modules', 'Messages', $template . $extension);
+		$template = dirname(__FILE__) . DS . 'templates' . DS . $template . '.json';
+
+		if ( ! file_exists($template))
+			throw new \Exception("O template nao foi localizado: <'$template'>", 1);
 
 		$this->file  = $template;
 		$this->json  = file_get_contents($template);

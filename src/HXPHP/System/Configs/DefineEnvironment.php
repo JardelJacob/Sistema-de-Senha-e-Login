@@ -10,11 +10,13 @@ class DefineEnvironment
 	{
 		$server_name = $_SERVER['SERVER_NAME'];
 		$development = new Environments\EnvironmentDevelopment;
-
-		(in_array($server_name, $development->servers)) ?
-			$this->currentEnviroment = 'development' :
+	
+		if (in_array($server_name, $development->servers)) {
+			$this->currentEnviroment = 'development';
+		}
+		else {
 			$this->currentEnviroment = 'production';
-
+		}
 
 		return $this->currentEnviroment;
 	}
@@ -22,7 +24,7 @@ class DefineEnvironment
 	public function setDefaultEnv($environment)
 	{
 		$env = new Environment;
-		if (is_object($env->add($environment)))
+		if ( is_object($env->add($environment)) )
 			$this->currentEnviroment = $environment;
 	}
 

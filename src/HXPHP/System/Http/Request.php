@@ -6,28 +6,27 @@ use HXPHP\System\Tools;
 
 class Request
 {
-
+	
 	/**
 	 * Atributos
 	 * @var null
 	 */
-	public  $subfolder = '';
-	public  $controller = 'IndexController';
-	public  $action = 'indexAction';
-	public  $params = [];
+	public  $controller;
+	public  $action;
+	public  $params = array();
 
 	/**
 	 * Filtros customizados de tratamento
 	 * @var array
 	 */
-	public $custom_filters = [];
+	public $custom_filters = array();
 
 	/**
 	 * Método construtor
 	 */
-	public function __construct($baseURI = '', $controller_directory = '')
+	public function __construct($baseURI = '')
 	{
-		$this->initialize($baseURI, $controller_directory);
+		$this->initialize($baseURI);
 		return $this;
 	}
 
@@ -35,50 +34,35 @@ class Request
 	 * Define os parâmetros do mecanismo MVC
 	 * @return object Retorna o objeto com as propriedades definidas
 	 */
-	public function initialize($baseURI, $controller_directory)
+	public function initialize($baseURI)
 	{
-		if ( ! empty($baseURI) && ! empty($controller_directory)) {
+		if ( ! empty($baseURI)) {
 			$explode = array_values(array_filter(explode('/', $_SERVER['REQUEST_URI'])));
 
-			$baseURICount = count(array_filter(explode('/', $baseURI)));
-
-			if (count($explode) == $baseURICount)
-				return $this;
-
-			if (count($explode) != $baseURICount){
-
-				for($i=0; $i < $baseURICount; $i++) { 
-					unset($explode[$i]);
-				}
-
+			if (isset($explode[0]) && $explode[0] == str_replace('/', '', $baseURI)) {
+				unset($explode[0]);
 				$explode = array_values($explode);
-
 			}
-			
-			if (file_exists($controller_directory . $explode[0])) {
-				$this->subfolder = $explode[0] . DS;
-				
-				if (isset($explode[1]))
-					$this->controller = Tools::filteredName($explode[1]).'Controller';
 
-				if (isset($explode[2])) {
-					$this->action = lcfirst(Tools::filteredName($explode[2])).'Action';
-
-					unset($explode[2]);
-				}
-			}
-			elseif (count($explode) == 1) {
-				$this->controller = Tools::filteredName($explode[0]).'Controller';
+			if (count($explode) == 0) {
+				$this->controller = 'IndexController';
+				$this->action = 'indexAction';
 
 				return $this;
 			}
-			else {
+
+			if (count($explode) == 1) {
 				$this->controller = Tools::filteredName($explode[0]).'Controller';
-				$this->action = lcfirst(Tools::filteredName($explode[1])).'Action';
+				$this->action = 'indexAction';
+
+				return $this;
 			}
 
-			unset($explode[0], $explode[1]);
+			$this->controller = Tools::filteredName($explode[0]).'Controller';
+			$this->action = lcfirst(Tools::filteredName($explode[1])).'Action';
 			
+			unset($explode[0], $explode[1]);
+
 			$this->params = array_values($explode);
 		}
 	}
@@ -87,7 +71,7 @@ class Request
 	 * Define filtros/flags customizados (http://php.net/manual/en/filter.filters.sanitize.php)
 	 * @param array $custom_filters Array com nome do campo e seu respectivo filtro
 	 */
-	public function setCustomFilters(array $custom_filters = [])
+	public function setCustomFilters(array $custom_filters = array())
 	{
 		return $this->custom_filters = $custom_filters;
 	}
@@ -99,15 +83,15 @@ class Request
 	 * @param  array $custom_filters  Filtros customizados para determinados campos
 	 * @return array                  Constate tratada
 	 */
-	public function filter(array $request, $data, array $custom_filters = [])
+	public function filter(array $request, $data, array $custom_filters = array())
 	{
-		$filters = [];
+		$filters = array();
 
-		foreach ($request as $key => $value)
-			if (!array_key_exists($key, $custom_filters))
+		foreach ($request as $key => $value) {
+			if ( ! array_key_exists($key, $custom_filters)) {
 				$filters[$key] = constant('FILTER_SANITIZE_STRING');
-
-
+			}
+		}
 
 		if (is_array($custom_filters) && is_array($custom_filters))
 			$filters = array_merge($filters,$custom_filters);
@@ -124,13 +108,13 @@ class Request
 	{
 		$get = $this->filter($_GET, INPUT_GET, $this->custom_filters);
 
-		if (!$name)
+		if ( ! $name) {
 			return $get;
+		}
 
-
-		if (!isset($get[$name]))
+		if ( ! isset($get[$name])) {
 			return null;
-
+		}
 
 		return $get[$name];
 	}
@@ -144,54 +128,16 @@ class Request
 	{
 		$post = $this->filter($_POST, INPUT_POST, $this->custom_filters);
 
-		if (!$name)
+		if ( ! $name) {
 			return $post;
+		}
 
-		if (!isset($post[$name]))
+		if ( ! isset($post[$name])) {
 			return null;
-
+		}
 
 		return $post[$name];
 	}
-
-    /**
-	 * Obtém os dados da superglobal $_SERVER
-	 * @param  string $name Nome do parâmetro
-	 * @return null         Retorna o array $_SERVER geral ou em um índice específico
-	 */
-    public function server($name = null)
-    {
-        $server = $this->filter($_SERVER, INPUT_SERVER, $this->custom_filters);
-
-        if(!$name)
-            return $server;
-
-        if(!isset($server[$name]) && !isset($_SERVER[$name]))
-            return NULL;
-
-        if (isset($_SERVER[$name]))
-        	return $_SERVER[$name];
-
-        return $server[$name];
-    }
-    
-    /**
-     * Obtém os dados da superglobal $_COOKIE
-     * @param string $name Nome do parâmetro
-     * @return null Retorna o array $_COOKIE geral ou em um índice específico
-     */
-    public function cookie($name = null)
-    {
-        $cookie = $this->filter($_COOKIE, INPUT_COOKIE, $this->custom_filters);
-    
-        if(!$name)
-             return $cookie;
-    
-        if(!isset($cookie[$name]))
-             return NULL;
-    
-        return $cookie[$name];
-    }
 
 	/**
 	 * Retorna o método da requisição
@@ -202,9 +148,9 @@ class Request
 	{
 		$method = $_SERVER['REQUEST_METHOD'];
 
-		if ($value)
+		if ($value) {
 			return $method == $value;
-
+		}
 
 		return $method;
 	}
@@ -244,17 +190,4 @@ class Request
 	{
 		return $this->getMethod('HEAD');
 	}
-
-
-    /*
-     * Verifica se os inputs no método requisitado estão no formato correto conforme o array informado $custom_filters
-     *
-     * @return boolean Inputs estão corretos ou não
-     */
-    public function isValid()
-    {
-        $method = $this->getMethod();
-
-        return array_search(false, $this->$method(), true) === false ? true : false;
-    }
 }

@@ -10,13 +10,11 @@ class EnvironmentDevelopment extends Configs\AbstractEnvironment
 
 	public function __construct()
 	{
-		ini_set('display_errors', 1);
-
 		parent::__construct();
-		$this->servers = [
+		$this->servers = array(
 			'localhost',
 			'127.0.0.1'
-		];
+		);
 
 		return $this;
 	}
